@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.16)
+
+project(sound_processor LANGUAGES CXX)
+
+add_library(
+    sound_processor_parser
+    src/console_parser.cpp
+    src/waveform.cpp
+    src/wav_reader.cpp
+    src/wav_writer.cpp
+)
+target_include_directories(sound_processor_parser PUBLIC include)
+target_compile_features(sound_processor_parser PUBLIC cxx_std_17)
+
+add_executable(sound_processor app/main.cpp)
+target_link_libraries(sound_processor PRIVATE sound_processor_parser)
