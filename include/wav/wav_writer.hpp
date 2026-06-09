@@ -1,6 +1,6 @@
 #pragma once
 
-#include "waveform.hpp"
+#include "wav/waveform.hpp"
 
 #include <string>
 

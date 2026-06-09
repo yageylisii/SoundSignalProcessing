@@ -18,6 +18,7 @@ private:
 public:
     enum class Result {
         Success,
+        NoArguments,
         InvalidArguments
     };
 

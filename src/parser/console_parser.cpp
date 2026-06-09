@@ -1,24 +1,25 @@
-#include "console_parser.hpp"
+#include "parser/console_parser.hpp"
 
 #include <utility>
 
 
-namespace {
-
-bool isOption(const std::string& argument)
+static bool isOption(const std::string& argument)
 {
     return argument == "-i" || argument == "-o" || argument == "-f";
 }
 
-} // namespace
-
 // parse command line arg and store the result in ArgsParser
 ArgsParser::Result ArgsParser::parse(int argc, char* argv[])
-{
+{   
+    // fill these fields
     _inFileName.clear();
     _outFileName.clear();
     _filterDescriptors.clear();
     _errorMessage.clear();
+
+    if (argc <= 1) {
+        return Result::NoArguments;
+    }
 
     int idx = 1;
     while (idx < argc) {
@@ -55,7 +56,7 @@ ArgsParser::Result ArgsParser::parse(int argc, char* argv[])
                 descriptor.parameters.emplace_back(argv[idx]);
                 ++idx;
             }
-
+            // transfer the descriptor to the parser: e.x {name: "ampl", parameters: {"0.8"} as structure
             _filterDescriptors.push_back(std::move(descriptor));
         } else {
             _errorMessage = "Unknown argument: " + option;

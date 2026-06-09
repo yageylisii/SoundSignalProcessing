@@ -1,17 +1,14 @@
-#include "wav_reader.hpp"
-#include "wav_format.hpp"
+#include "wav/wav_reader.hpp"
+#include "wav/wav_format.hpp"
 
 #include <cstring>
 #include <fstream>
 
-namespace {
-
-bool hasId(const char actual[4], const char expected[4])
+// compare 4-character chunk IDs in WAV file headers
+static bool hasId(const char actual[4], const char expected[4])
 {
     return std::memcmp(actual, expected, 4) == 0;
 }
-
-}  // namespace
 
 // parse WAV file and store the result in waveform
 WavReader::Result WavReader::read(const std::string& fileName,
@@ -20,14 +17,14 @@ WavReader::Result WavReader::read(const std::string& fileName,
     waveform = {};
     _errorMessage.clear();
 
-    std::ifstream input(fileName, std::ios::binary);
+    std::ifstream input(fileName, std::ios::binary); // create input file strem for readin WAV file
     if(!input)
     {
         _errorMessage = "Cannot open WAV file: " + fileName;
         return Result::CannotOpenFile;
     }
 
-    Result result = readRiffHeader(input);
+    Result result = readRiffHeader(input); // read the header
     if(result != Result::Success)
         return result;
 
@@ -43,11 +40,11 @@ WavReader::Result WavReader::read(const std::string& fileName,
     return readSamples(input, waveform, fileInfo);
 }
 
-// check that the file starts with a valid RIFF/WAVE header
+// check the file is valid
 WavReader::Result WavReader::readRiffHeader(std::istream& input)
 {
-    wav::RiffHeader header = {};
-    if(!wav::readObject(input, header) || !hasId(header.sign, "RIFF") ||
+    RiffHeader header = {}; // empty structure
+    if(!readObject(input, header) || !hasId(header.sign, "RIFF") ||
        !hasId(header.waveId, "WAVE"))
     {
         _errorMessage = "The file is not a valid RIFF/WAVE file";
@@ -57,24 +54,24 @@ WavReader::Result WavReader::readRiffHeader(std::istream& input)
     return Result::Success;
 }
 
+// parse fmt chunk and data chunk in Waveform and WavFileInfo while we dont
 WavReader::Result WavReader::findChunks(std::istream& input, Waveform& waveform,
                                         WavFileInfo& fileInfo)
 {
-    // parse fmt chunk and data chunk in Waveform and WavFileInfo while we dont
     // found them and the file is not ended
     while(input && (!fileInfo.formatFound || !fileInfo.dataFound))
     {
-        wav::ChunkHeader chunkHeader = {};
-        if(!wav::readObject(input, chunkHeader))
+        ChunkHeader chunkHeader = {};
+        if(!readObject(input, chunkHeader))
             break;
 
         const std::streampos chunkDataPosition =
             input.tellg();  // save the position of chunk data
         if(hasId(chunkHeader.id, "fmt "))
         {
-            wav::FmtChunkData fmtData = {};
-            if(chunkHeader.size < sizeof(wav::FmtChunkData) ||
-               !wav::readObject(input, fmtData))
+            FmtChunkData fmtData = {};
+            if(chunkHeader.size < sizeof(FmtChunkData) ||
+               !readObject(input, fmtData))
             {
                 _errorMessage = "Invalid WAV format chunk";
                 return Result::InvalidFile;
@@ -82,9 +79,9 @@ WavReader::Result WavReader::findChunks(std::istream& input, Waveform& waveform,
 
             fileInfo.audioFormat = fmtData.audioFormat;
             fileInfo.blockAlign = fmtData.blockAlign;
-            waveform.channelCount = fmtData.channelCount;
-            waveform.sampleRate = fmtData.sampleRate;
-            waveform.bitsPerSample = fmtData.bitsPerSample;
+            waveform.setChannelCount(fmtData.channelCount);
+            waveform.setSampleRate(fmtData.sampleRate);
+            waveform.setBitsPerSample(fmtData.bitsPerSample);
             fileInfo.formatFound = true;
         }
         else if(hasId(chunkHeader.id, "data"))
@@ -104,7 +101,7 @@ WavReader::Result WavReader::findChunks(std::istream& input, Waveform& waveform,
     }
 
     if(!fileInfo.formatFound ||
-       !fileInfo.dataFound)  // if we dont found fmt or data chunk
+       !fileInfo.dataFound)  // if we did not found fmt or data chunk
     {
         _errorMessage = "WAV file must contain fmt and data chunks";
         return Result::InvalidFile;
@@ -121,23 +118,23 @@ WavReader::Result WavReader::validateFormat(const Waveform& waveform,
         _errorMessage = "Only uncompressed PCM WAV files are supported";
         return Result::UnsupportedFormat;
     }
-    if(waveform.channelCount != 1)
+    if(waveform.getChannelCount() != 1)
     {
         _errorMessage = "Only mono WAV files are supported";
         return Result::UnsupportedFormat;
     }
-    if(waveform.bitsPerSample != 16)
+    if(waveform.getBitsPerSample() != 16)
     {
         _errorMessage = "Only 16-bit WAV files are supported";
         return Result::UnsupportedFormat;
     }
-    if(waveform.sampleRate != 44100)
+    if(waveform.getSampleRate() != 44100)
     {
         _errorMessage = "Only 44100 Hz WAV files are supported";
         return Result::UnsupportedFormat;
     }
-    if(waveform.channelCount == 0 || waveform.sampleRate == 0 ||
-       fileInfo.blockAlign != waveform.channelCount * sizeof(std::int16_t) ||
+    if(waveform.getChannelCount() == 0 || waveform.getSampleRate() == 0 ||
+       fileInfo.blockAlign != waveform.getChannelCount() * sizeof(std::int16_t) ||
        fileInfo.dataSize % fileInfo.blockAlign != 0)
     {
         _errorMessage = "Invalid WAV audio parameters";
@@ -152,11 +149,12 @@ WavReader::Result WavReader::readSamples(std::istream& input,
                                          Waveform& waveform,
                                          const WavFileInfo& fileInfo)
 {
-    waveform.samples.resize(fileInfo.dataSize / sizeof(std::int16_t));
+    auto& samples = waveform.getSamples();
+    samples.resize(fileInfo.dataSize / sizeof(std::int16_t)); // get memory for samples vector
     input.clear();
     input.seekg(fileInfo.dataPosition);
     if(fileInfo.dataSize != 0 &&
-       !input.read(reinterpret_cast<char*>(waveform.samples.data()),
+       !input.read(reinterpret_cast<char*>(samples.data()),
                    static_cast<std::streamsize>(fileInfo.dataSize)))
     {
         _errorMessage = "WAV sample data is incomplete";

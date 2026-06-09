@@ -1,6 +1,6 @@
 #pragma once
 
-#include "waveform.hpp"
+#include "wav/waveform.hpp"
 
 #include <cstdint>
 #include <iosfwd>
@@ -24,7 +24,7 @@ private:
     struct WavFileInfo {
         std::uint16_t audioFormat = 0;
         std::uint16_t blockAlign = 0;
-        std::streampos dataPosition = {};
+        std::streampos dataPosition = {}; // position of the chunk data in the file
         std::uint32_t dataSize = 0;
         bool formatFound = false;
         bool dataFound = false;
