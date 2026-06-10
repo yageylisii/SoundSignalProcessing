@@ -7,21 +7,21 @@
 int main(int argc, char* argv[])
 {
     try
-    {   // create parser object
-        ArgsParser parser; 
+    {  // create parser object
+        ArgsParser parser;
         // fill the parser object with command line arguments
         const ArgsParser::Result parseResult = parser.parse(argc, argv);
-        if(parseResult == ArgsParser::Result::NoArguments) // if no arguments
+        if(parseResult == ArgsParser::Result::NoArguments)  // if no arguments
         {
             printHelp(argv[0]);
             return SuccessExitCode;
         }
-        if(parseResult != ArgsParser::Result::Success) // check correct arguments
+        if(parseResult !=
+           ArgsParser::Result::Success)  // check correct arguments
         {
             std::cerr << "Error: " << parser.getErrorMessage() << '\n';
             return FailureExitCode;
         }
-
 
         // create waveform object and set required parameters
         Waveform waveform;
@@ -31,8 +31,9 @@ int main(int argc, char* argv[])
 
         // if input file is not empty
         if(!parser.getInFileName().empty())
-        {   
-            // if input file exists then create WavReader and fill it with the file data
+        {
+            // if input file exists then create WavReader and fill it with the
+            // file data
             WavReader wavReader;
             if(wavReader.read(parser.getInFileName(), waveform) !=
                WavReader::Result::Success)
@@ -42,7 +43,8 @@ int main(int argc, char* argv[])
             }
         }
 
-        // transfer filter descriptors from command line arguments to smart pointers on a funcs
+        // transfer filter descriptors from command line arguments to smart
+        // pointers on a funcs
         CmdLineArgs2PipelineConverter converter;
         // create pipeline object and fill it
         Pipeline pipeline =
@@ -59,7 +61,7 @@ int main(int argc, char* argv[])
 
         // if output file is not empty
         if(!parser.getOutFileName().empty())
-        {   
+        {
             // create WavWriter and write the output file
             WavWriter wavWriter;
             // write waveform to the output file

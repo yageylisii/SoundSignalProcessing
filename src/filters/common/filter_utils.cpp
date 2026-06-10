@@ -18,7 +18,7 @@ std::int16_t clampSample(double value)
     const double minimum = std::numeric_limits<std::int16_t>::min();
     const double maximum = std::numeric_limits<std::int16_t>::max();
     return static_cast<std::int16_t>(
-        std::llround(std::clamp(value, minimum, maximum)));
+        std::llround(std::clamp(value, minimum, maximum))); // limited and rounded value
 }
 
 bool calculateGeneratorSize(double durationMs, std::size_t& sampleCount)

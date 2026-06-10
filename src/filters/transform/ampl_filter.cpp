@@ -4,35 +4,26 @@
 
 #include <cmath>
 
-
-AmplFilter::AmplFilter(double amplification)
-    : _amplification(amplification)
-{
-}
+AmplFilter::AmplFilter(double amplification): _amplification(amplification) {}
 
 FilterState AmplFilter::apply(Waveform* sound)
 {
-    if (!isValidWaveform(sound)) { // checks
+    if(!isValidWaveform(sound))
+    {  // checks
         return FilterState::InvalidWaveform;
     }
-    if (sound->getSamples().empty()) {
+    if(sound->getSamples().empty())
         return FilterState::EmptyWaveform;
-    }
-    if (!std::isfinite(_amplification) || _amplification < 0.0) {
+    if(!std::isfinite(_amplification) || _amplification < 0.0)
         return FilterState::InvalidParameter;
-    }
 
-    for (std::int16_t& sample : sound->getSamples()) {
+    for(std::int16_t& sample: sound->getSamples())
         sample = clampSample(sample * _amplification);
-    }
 
     return FilterState::Success;
 }
 
-double AmplFilter::getAmplification() const
-{
-    return _amplification;
-}
+double AmplFilter::getAmplification() const { return _amplification; }
 
 void AmplFilter::setAmplification(double amplification)
 {
