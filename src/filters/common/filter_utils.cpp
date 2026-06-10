@@ -42,5 +42,5 @@ void prepareGeneratedWaveform(Waveform& sound, std::size_t sampleCount)
     sound.setSampleRate(GeneratorSampleRate);
     sound.setChannelCount(GeneratorChannelCount);
     sound.setBitsPerSample(GeneratorBitsPerSample);
-    sound.getSamples().assign(sampleCount, 0);
+    sound.getSamples().assign(sampleCount, 0); // delete all elements in the vecror and fill it with zeros
 }
