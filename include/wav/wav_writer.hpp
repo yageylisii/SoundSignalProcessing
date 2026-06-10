@@ -4,10 +4,14 @@
 
 #include <string>
 
+class WavWriter
+{
+private:
+    std::string _errorMessage;
 
-class WavWriter {
 public:
-    enum class Result {
+    enum class Result
+    {
         Success,
         CannotCreateFile,
         UnsupportedFormat,
@@ -17,7 +21,4 @@ public:
     Result write(const std::string& fileName, const Waveform& waveform);
 
     const std::string& getErrorMessage() const;
-
-private:
-    std::string _errorMessage;
 };

@@ -4,9 +4,9 @@
 #include <cstdint>
 #include <vector>
 
-
 // Owning object model of a sound signal loaded from file into Waveform class
-class Waveform {
+class Waveform
+{
 private:
     std::uint32_t _sampleRate = 0;
     std::uint16_t _channelCount = 0;

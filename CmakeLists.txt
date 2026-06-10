@@ -4,6 +4,27 @@ project(sound_processor LANGUAGES CXX)
 
 option(BUILD_TESTS "Build tests" OFF)
 
+set(SOUND_PROCESSOR_HEADERS
+    include/application.hpp
+    include/parser/console_parser.hpp
+    include/pipeline/cmd_line_args_2_pipeline_converter.hpp
+    include/pipeline/pipeline.hpp
+    include/filters/common/filter.hpp
+    include/filters/filters.hpp
+    include/filters/generator/am_generator_filter.hpp
+    include/filters/generator/fm_generator_filter.hpp
+    include/filters/generator/sin_generator_filter.hpp
+    include/filters/transform/ampl_filter.hpp
+    include/filters/transform/low_pass_filter.hpp
+    include/filters/transform/normalize_filter.hpp
+    include/filters/transform/silence_filter.hpp
+    include/filters/transform/time_stretch_filter.hpp
+    include/wav/wav_format.hpp
+    include/wav/wav_reader.hpp
+    include/wav/wav_writer.hpp
+    include/wav/waveform.hpp
+)
+
 set(SOUND_PROCESSOR_SOURCES
     src/application.cpp
     src/parser/console_parser.cpp
@@ -26,6 +47,7 @@ set(SOUND_PROCESSOR_SOURCES
 add_executable(
     sound_processor
     app/main.cpp
+    ${SOUND_PROCESSOR_HEADERS}
     ${SOUND_PROCESSOR_SOURCES}
 )
 target_include_directories(sound_processor PRIVATE include)
@@ -48,6 +70,7 @@ if(BUILD_TESTS)
     add_executable(
         sound_processor_tests
         tests/sound_processor_tests.cpp
+        ${SOUND_PROCESSOR_HEADERS}
         ${SOUND_PROCESSOR_SOURCES}
     )
     target_include_directories(sound_processor_tests PRIVATE include)

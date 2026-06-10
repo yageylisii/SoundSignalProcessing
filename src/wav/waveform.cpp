@@ -67,7 +67,8 @@ double Waveform::getDurationSeconds() const // calculate duration of the sound i
 
 std::size_t Waveform::secondsToSamples(double seconds) const // transform seconds to count of samples
 {
-    if (seconds <= 0.0 || _sampleRate == 0 || _channelCount == 0) {
+    if (!std::isfinite(seconds) || seconds <= 0.0 || _sampleRate == 0
+        || _channelCount == 0) {
         return 0;
     }
 

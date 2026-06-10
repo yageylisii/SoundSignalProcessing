@@ -42,13 +42,13 @@ int main(int argc, char* argv[])
             }
         }
 
-        // create pipeline object and fill it with filters from command line arguments
+        // transfer filter descriptors from command line arguments to smart pointers on a funcs
         CmdLineArgs2PipelineConverter converter;
-        // transfer filter descriptors from command line arguments
+        // create pipeline object and fill it
         Pipeline pipeline =
             converter.createPipeline(parser.getFilterDescriptors());
 
-        // apply filters to the waveform
+        // apply pipline filters to the waveform
         const FilterState filterState = pipeline.apply(&waveform);
         if(filterState != FilterState::Success)
         {

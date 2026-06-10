@@ -56,7 +56,7 @@ ArgsParser::Result ArgsParser::parse(int argc, char* argv[])
                 descriptor.parameters.emplace_back(argv[idx]);
                 ++idx;
             }
-            // transfer the descriptor to the parser: e.x {name: "ampl", parameters: {"0.8"} as structure
+            // transfer the descriptor to the parser: e.x {name: "ampl", parameters: {"0.8"} as a structure
             _filterDescriptors.push_back(std::move(descriptor));
         } else {
             _errorMessage = "Unknown argument: " + option;

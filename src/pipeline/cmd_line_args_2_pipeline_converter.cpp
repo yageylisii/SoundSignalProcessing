@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <utility>
 
+// check correct of filter parametrs
 static void requireParameterCount(const FilterDescriptor& descriptor,
                                   std::size_t expected)
 {
@@ -18,7 +19,7 @@ static void requireParameterCount(const FilterDescriptor& descriptor,
                                     " parameter(s)");
     }
 }
-
+// transform string parameter from cmd line to double
 static double parseDouble(const FilterDescriptor& descriptor, std::size_t index,
                           const std::string& parameterName)
 {
@@ -33,6 +34,7 @@ static double parseDouble(const FilterDescriptor& descriptor, std::size_t index,
     double value = 0.0;
     try
     {
+        // parse string to double and count parsed characters
         value = std::stod(token, &parsedCharacters);
     }
     catch(const std::exception&)
@@ -51,6 +53,7 @@ static double parseDouble(const FilterDescriptor& descriptor, std::size_t index,
     return value;
 }
 
+// transform string parameter from cmd line to size_t
 static std::size_t parseSize(const FilterDescriptor& descriptor,
                              std::size_t index,
                              const std::string& parameterName)
@@ -66,6 +69,7 @@ static std::size_t parseSize(const FilterDescriptor& descriptor,
     unsigned long long value = 0;
     try
     {
+        // parse string
         value = std::stoull(token, &parsedCharacters);
     }
     catch(const std::exception&)
@@ -85,16 +89,19 @@ static std::size_t parseSize(const FilterDescriptor& descriptor,
     return static_cast<std::size_t>(value);
 }
 
-static std::unique_ptr<IFilter> createAmplFilter(
-    const FilterDescriptor& descriptor)
+// transform filter descriptor from cmd line (string) to filter object
+static std::unique_ptr<IFilter>
+createAmplFilter(const FilterDescriptor& descriptor)
 {
-    requireParameterCount(descriptor, 1);
-    const double factor = parseDouble(descriptor, 0, "factor");
+    requireParameterCount(descriptor, 1);  // check correct number of parameters
+    const double factor = parseDouble(descriptor, 0, "factor");  // parse
     if(factor < 0.0)
         throw std::invalid_argument("Ampl factor must be non-negative");
-    return std::make_unique<AmplFilter>(factor);
+    return std::make_unique<AmplFilter>(
+        factor);  // make filter obj using make_unique
 }
 
+// analogously for other filters
 static std::unique_ptr<IFilter>
 createNormalizeFilter(const FilterDescriptor& descriptor)
 {
@@ -112,8 +119,9 @@ createNormalizeFilter(const FilterDescriptor& descriptor)
     return std::make_unique<NormalizeFilter>(peak);
 }
 
-static std::unique_ptr<IFilter> createSilenceFilter(
-    const FilterDescriptor& descriptor)
+// analogously for other filters
+static std::unique_ptr<IFilter>
+createSilenceFilter(const FilterDescriptor& descriptor)
 {
     requireParameterCount(descriptor, 3);
 
@@ -135,6 +143,7 @@ static std::unique_ptr<IFilter> createSilenceFilter(
     return std::make_unique<SilenceFilter>(unit, start, end);
 }
 
+// analogously for other filters
 static std::unique_ptr<IFilter>
 createTimeStretchFilter(const FilterDescriptor& descriptor)
 {
@@ -145,8 +154,9 @@ createTimeStretchFilter(const FilterDescriptor& descriptor)
     return std::make_unique<TimeStretchFilter>(factor);
 }
 
-static std::unique_ptr<IFilter> createLowPassFilter(
-    const FilterDescriptor& descriptor)
+// analogously for other filters
+static std::unique_ptr<IFilter>
+createLowPassFilter(const FilterDescriptor& descriptor)
 {
     requireParameterCount(descriptor, 1);
     const std::size_t windowSize = parseSize(descriptor, 0, "window_size");
@@ -158,6 +168,7 @@ static std::unique_ptr<IFilter> createLowPassFilter(
     return std::make_unique<LowPassFilter>(windowSize);
 }
 
+// analogously for other filters
 static std::unique_ptr<IFilter>
 createGeneratorFilter(const FilterDescriptor& descriptor)
 {
@@ -218,6 +229,7 @@ createGeneratorFilter(const FilterDescriptor& descriptor)
     throw std::invalid_argument("Unknown generator type: " + type);
 }
 
+// CmdLineArgs2PipelineConverter implementation
 CmdLineArgs2PipelineConverter::CmdLineArgs2PipelineConverter()
 {
     addFilterProducer("ampl", createAmplFilter);
@@ -228,15 +240,18 @@ CmdLineArgs2PipelineConverter::CmdLineArgs2PipelineConverter()
     addFilterProducer("generator", createGeneratorFilter);
 }
 
+// create pipeline by descriptors
 Pipeline CmdLineArgs2PipelineConverter::createPipeline(
     const std::vector<FilterDescriptor>& descriptors) const
 {
-    Pipeline pipeline;
+    Pipeline pipeline; // create empty pipeline
+    // fill pipeline by filters created from descriptors
     for(const FilterDescriptor& descriptor: descriptors)
         pipeline.addFilter(createFilter(descriptor));
     return pipeline;
 }
 
+// fill _producers map by filter name and producer function
 void CmdLineArgs2PipelineConverter::addFilterProducer(
     const std::string& filterName, FilterProducer producer)
 {
@@ -248,6 +263,7 @@ void CmdLineArgs2PipelineConverter::addFilterProducer(
     _producers[filterName] = producer;
 }
 
+// get producer func using filter name from _producers
 FilterProducer CmdLineArgs2PipelineConverter::getFilterProducer(
     const std::string& filterName) const
 {

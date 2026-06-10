@@ -7,6 +7,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <cstdint>
+#include <fstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -56,6 +57,27 @@ TEST_CASE("Command line parser", "[parser]")
         REQUIRE(parser.getFilterDescriptors()[0].name == "ampl");
         REQUIRE(parser.getFilterDescriptors()[0].parameters ==
                 std::vector<std::string>{"0.8"});
+    }
+
+    SECTION("Missing option value")
+    {
+        char application[] = "sound_processor";
+        char inputOption[] = "-i";
+        char* arguments[] = {application, inputOption};
+
+        REQUIRE(parser.parse(2, arguments) ==
+                ArgsParser::Result::InvalidArguments);
+        REQUIRE_FALSE(parser.getErrorMessage().empty());
+    }
+
+    SECTION("Unknown option")
+    {
+        char application[] = "sound_processor";
+        char option[] = "--unknown";
+        char* arguments[] = {application, option};
+
+        REQUIRE(parser.parse(2, arguments) ==
+                ArgsParser::Result::InvalidArguments);
     }
 }
 
@@ -161,6 +183,19 @@ TEST_CASE("Converter rejects an unknown filter", "[pipeline][errors]")
 
     REQUIRE_THROWS_AS(converter.createPipeline({{"unknown", {}}}),
                       std::invalid_argument);
+    REQUIRE_THROWS_AS(converter.createPipeline({{"ampl", {"wrong"}}}),
+                      std::invalid_argument);
+}
+
+TEST_CASE("Generator replaces the input signal", "[pipeline][generator]")
+{
+    Waveform waveform = makeWaveform({1, 2, 3});
+    SinGeneratorFilter generator(440.0, 10.0);
+
+    REQUIRE(generator.apply(&waveform) == FilterState::Success);
+    REQUIRE(waveform.getSampleCount() == 441);
+    REQUIRE(waveform.getSamples() !=
+            std::vector<std::int16_t>{1, 2, 3});
 }
 
 TEST_CASE("WAV write and read preserves sound", "[wav]")
@@ -192,4 +227,20 @@ TEST_CASE("Empty WAV can be written and read", "[wav]")
     Waveform result;
     REQUIRE(reader.read(fileName, result) == WavReader::Result::Success);
     REQUIRE(result.getSamples().empty());
+}
+
+TEST_CASE("Invalid WAV is rejected without an exception", "[wav][errors]")
+{
+    const std::string fileName = "/tmp/sound_processor_invalid_test.wav";
+    {
+        std::ofstream output(fileName, std::ios::binary);
+        output << "not a wav file";
+    }
+
+    WavReader reader;
+    Waveform waveform;
+
+    REQUIRE_NOTHROW(reader.read(fileName, waveform));
+    REQUIRE(reader.read(fileName, waveform) == WavReader::Result::InvalidFile);
+    REQUIRE_FALSE(reader.getErrorMessage().empty());
 }

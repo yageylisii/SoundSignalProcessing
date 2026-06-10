@@ -17,14 +17,16 @@ WavReader::Result WavReader::read(const std::string& fileName,
     waveform = {};
     _errorMessage.clear();
 
-    std::ifstream input(fileName, std::ios::binary); // create input file strem for readin WAV file
+    std::ifstream input(
+        fileName,
+        std::ios::binary);  // create input file strem for readin WAV file
     if(!input)
     {
         _errorMessage = "Cannot open WAV file: " + fileName;
         return Result::CannotOpenFile;
     }
 
-    Result result = readRiffHeader(input); // read the header
+    Result result = readRiffHeader(input);  // read the header
     if(result != Result::Success)
         return result;
 
@@ -43,7 +45,7 @@ WavReader::Result WavReader::read(const std::string& fileName,
 // check the file is valid
 WavReader::Result WavReader::readRiffHeader(std::istream& input)
 {
-    RiffHeader header = {}; // empty structure
+    RiffHeader header = {};  // empty structure
     if(!readObject(input, header) || !hasId(header.sign, "RIFF") ||
        !hasId(header.waveId, "WAVE"))
     {
@@ -79,6 +81,7 @@ WavReader::Result WavReader::findChunks(std::istream& input, Waveform& waveform,
 
             fileInfo.audioFormat = fmtData.audioFormat;
             fileInfo.blockAlign = fmtData.blockAlign;
+            fileInfo.byteRate = fmtData.byteRate;
             waveform.setChannelCount(fmtData.channelCount);
             waveform.setSampleRate(fmtData.sampleRate);
             waveform.setBitsPerSample(fmtData.bitsPerSample);
@@ -134,7 +137,9 @@ WavReader::Result WavReader::validateFormat(const Waveform& waveform,
         return Result::UnsupportedFormat;
     }
     if(waveform.getChannelCount() == 0 || waveform.getSampleRate() == 0 ||
-       fileInfo.blockAlign != waveform.getChannelCount() * sizeof(std::int16_t) ||
+       fileInfo.blockAlign !=
+           waveform.getChannelCount() * sizeof(std::int16_t) ||
+       fileInfo.byteRate != waveform.getSampleRate() * fileInfo.blockAlign ||
        fileInfo.dataSize % fileInfo.blockAlign != 0)
     {
         _errorMessage = "Invalid WAV audio parameters";
@@ -150,7 +155,8 @@ WavReader::Result WavReader::readSamples(std::istream& input,
                                          const WavFileInfo& fileInfo)
 {
     auto& samples = waveform.getSamples();
-    samples.resize(fileInfo.dataSize / sizeof(std::int16_t)); // get memory for samples vector
+    samples.resize(fileInfo.dataSize /
+                   sizeof(std::int16_t));  // get memory for samples vector
     input.clear();
     input.seekg(fileInfo.dataPosition);
     if(fileInfo.dataSize != 0 &&

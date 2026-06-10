@@ -5,7 +5,7 @@
 #include <ostream>
 
 
-#pragma pack(push, 1)
+#pragma pack(push, 1) // padding is 1 byte, so the structure was tight
 
 // first 12 bytes of a WAV file
 struct RiffHeader {
@@ -35,7 +35,6 @@ struct FmtChunkData {
 static_assert(sizeof(RiffHeader) == 12);
 static_assert(sizeof(ChunkHeader) == 8);
 static_assert(sizeof(FmtChunkData) == 16);
-
 
 // read sizeof(object) bytes from the input stream into object
 template <typename T>

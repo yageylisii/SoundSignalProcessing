@@ -7,9 +7,11 @@
 #include <string>
 
 // read WAV file and store the result in a Waveform
-class WavReader {
+class WavReader
+{
 public:
-    enum class Result {
+    enum class Result
+    {
         Success,
         CannotOpenFile,
         InvalidFile,
@@ -21,9 +23,11 @@ public:
     const std::string& getErrorMessage() const;
 
 private:
-    struct WavFileInfo {
+    struct WavFileInfo
+    {
         std::uint16_t audioFormat = 0;
         std::uint16_t blockAlign = 0;
+        std::uint32_t byteRate = 0;
         std::streampos dataPosition = {}; // position of the chunk data in the file
         std::uint32_t dataSize = 0;
         bool formatFound = false;
@@ -31,17 +35,12 @@ private:
     };
 
     Result readRiffHeader(std::istream& input);
-    Result findChunks(
-        std::istream& input,
-        Waveform& waveform,
-        WavFileInfo& fileInfo);
-    Result validateFormat(
-        const Waveform& waveform,
-        const WavFileInfo& fileInfo);
-    Result readSamples(
-        std::istream& input,
-        Waveform& waveform,
-        const WavFileInfo& fileInfo);
+    Result findChunks(std::istream& input, Waveform& waveform,
+                      WavFileInfo& fileInfo);
+    Result validateFormat(const Waveform& waveform,
+                          const WavFileInfo& fileInfo);
+    Result readSamples(std::istream& input, Waveform& waveform,
+                       const WavFileInfo& fileInfo);
 
     std::string _errorMessage;
 };
